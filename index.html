@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <style>
         #map {
             position: relative;
@@ -10,19 +12,21 @@
             position: absolute;
         }
         #message {
-            font-size: 3em;
+            font-size: 2em;
             text-align: center;
         }
     </style>
 </head>
 <body>
-    <div id="message"></div>
+    <div id="message">
+        Warte auf GPS-Signal...
+    </div>
     <div id="map">
-        <img src="map.jpg" alt="Map" style="width:100%;">
-        <div id="dot">
-            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="50" fill="red">
-                    <animate attributeName="r" from="0" to="50" dur="2s" begin="0s" repeatCount="indefinite" />
+        <img src="map.png" alt="Map" style="width:100%;">
+        <div id="dot" style="display:none;">
+            <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="10" cy="10" r="10" fill="red">
+                    <animate attributeName="r" from="0" to="10" dur="2s" begin="0s" repeatCount="indefinite" />
                     <animate attributeName="opacity" from="1" to="0.1" dur="2s" begin="0s" repeatCount="indefinite" />
                 </circle>
             </svg>
@@ -42,14 +46,13 @@
 
         window.onload = function() {
             getPosition();
-            setInterval(getPosition, 1000);
+            setInterval(getPosition, 5000);
         }
 
         function getPosition(){
             navigator.geolocation.getCurrentPosition(position => { 
-              
                 if (position.coords.latitude < corner.bottom || position.coords.latitude > corner.top || position.coords.longitude < corner.left || position.coords.longitude > corner.right) {
-                    message.innerText = 'Du befindest Dich außerhalb der Rallye-Zone!';
+                    message.innerText = 'Du befindest Dich außerhalb der Rallye-Zone.' + position.coords.latitude + ' ' + position.coords.longitude;
                     dot.style.display = 'none';
                     return;
                 }
@@ -62,8 +65,23 @@
 
                 dot.style.display = 'block';
                 message.innerText = '';
-                console.log(position.coords.latitude, position.coords.longitude);
                 setDot(position.coords.latitude, position.coords.longitude);
+            },
+            error => {
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        message.innerText = 'Bitte erlaube den Zugriff auf Deinen Standort.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        message.innerText = 'Standortinformationen sind nicht verfügbar.';
+                        break;
+                    case error.TIMEOUT:
+                        message.innerText = 'Zeitüberschreitung beim Abrufen des Standorts.';
+                        break;
+                    case error.UNKNOWN_ERROR:
+                        message.innerText = 'Ein unbekannter Fehler ist aufgetreten.';
+                        break;
+                }
             });
         }
 
