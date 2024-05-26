@@ -9,9 +9,14 @@
         #dot {
             position: absolute;
         }
+        #message {
+            font-size: 3em;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
+    <div id="message"></div>
     <div id="map">
         <img src="map.jpg" alt="Map" style="width:100%;">
         <div id="dot">
@@ -27,25 +32,50 @@
     <script>
         const corner = {
             top: 48.495996,
-            left: 9.293618,
             bottom: 48.488030,
+            left: 9.293618,
             right: 9.304026
         }
 
         const dot = document.getElementById('dot');
+        const message = document.getElementById('message');
 
-        navigator.geolocation.getCurrentPosition(position => { 
-            setDot(position.coords.latitude, position.coords.longitude);
-        });
+        window.onload = function() {
+            getPosition();
+            setInterval(getPosition, 1000);
+        }
+
+        function getPosition(){
+            navigator.geolocation.getCurrentPosition(position => { 
+              
+                if (position.coords.latitude < corner.bottom || position.coords.latitude > corner.top || position.coords.longitude < corner.left || position.coords.longitude > corner.right) {
+                    message.innerText = 'Du befindest Dich außerhalb der Rallye-Zone!';
+                    dot.style.display = 'none';
+                    return;
+                }
+
+                if( position.coords.accuracy > 150 ) {
+                    message.innerText = 'GPS-Signal zu schwach!';
+                    dot.style.display = 'none';
+                    return;
+                }
+
+                dot.style.display = 'block';
+                message.innerText = '';
+                console.log(position.coords.latitude, position.coords.longitude);
+                setDot(position.coords.latitude, position.coords.longitude);
+            });
+        }
 
         function setDot(lat, lon) {
-            if (lat < corner.bottom || lat > corner.top || lon < corner.left || lon > corner.right) {
-                alert('You are not in the area');
-                return;
-            }
-            console.log(lat, lon);
+            lat = (lat - corner.bottom) / (corner.top - corner.bottom) * 100;
+            lon = (lon - corner.left) / (corner.right - corner.left) * 100;
             dot.style.left = lon + '%';
             dot.style.top = lat + '%';
+        }
+
+        function setMessage(text) {
+            message.innerText = text;
         }
     </script>
 </body>
